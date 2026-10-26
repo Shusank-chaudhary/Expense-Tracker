@@ -1,6 +1,6 @@
 import { Outlet, useNavigate } from "react-router";
 import { DashboardIcon } from "../../component/icon/LeftDashboardIcon";
-import { FaHome, FaMoneyBill, FaRProject, FaTypo3, FaUser } from "react-icons/fa";
+import { FaHome, FaMoneyBill, FaRProject, FaTypo3, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { GoArrowRight } from "react-icons/go";
 import { useEffect } from "react";
 import {toast} from "sonner";
@@ -15,7 +15,7 @@ export default function AdminLayout() {
             toast.warning("You need to login to access!!")
             navigate('/')
         }
-    }, [])
+    }, [loggedInUser, navigate]);
     return (<>
         <div className="flex min-h-screen bg-gray-100">
             {/* Sidebar */}
@@ -28,7 +28,7 @@ export default function AdminLayout() {
                 <DashboardIcon to="/admin/reports" leftIcon={<FaRProject />} rightIcon={<GoArrowRight />} label="Reports" />
                 <DashboardIcon to="/admin/activity" leftIcon={<FaHome />} rightIcon={<GoArrowRight />} label="Activity Logs" />
                 <DashboardIcon to="/admin/settings" leftIcon={<FaUser />} rightIcon={<GoArrowRight />} label="Setting" />
-                <DashboardIcon to="/admin/logout" leftIcon={<FaRProject />} rightIcon={<GoArrowRight />} label="Logout" />
+                <DashboardIcon to="/admin/logout" leftIcon={<FaSignOutAlt />} rightIcon={<GoArrowRight />} label="Logout" />
             </aside>
 
             {/* Main Content */}
@@ -36,7 +36,14 @@ export default function AdminLayout() {
                 {/* Header */}
                 <header className="bg-green-800 shadow p-6 flex justify-between items-center sticky top-0 z-20">
                     <h1 className="text-3xl font-bold text-green-300">Dashboard</h1>
-                    <div className="text-green-300">Admin User</div>
+                    <div className="flex items-center gap-3 text-green-300">
+                        <div className="text-right">
+                            <p className="font-semibold">
+                                {loggedInUser?.name}
+                            </p>
+                            <p className="text-xs">Administrator</p>
+                        </div>
+                    </div>
                 </header>
 
                 {/* Content Area */}

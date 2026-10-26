@@ -7,7 +7,7 @@ import { Spinner } from "../../component/ui/Loading"
 
 const AuthProvider = ({ children }: Readonly<{ children: ReactNode }>) => {
   const [loggedInUser, setLoggedInUser] = useState<IUser>()
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => Boolean(Cookies.get("_at7")));
 
   const loginUser = async (data: ICredentials): Promise<IUser> => {
     const response = await axiosInstance.post("/auth/login", data);
@@ -32,13 +32,16 @@ const AuthProvider = ({ children }: Readonly<{ children: ReactNode }>) => {
     }
   }
 
+  const logoutUser = (): void => {
+  Cookies.remove("_at7");
+  setLoggedInUser(undefined);
+};
+
   useEffect(() => {
     const token = Cookies.get("_at7");
 
     if (token) {
       getLoggedInUser();
-    } else {
-      setLoading(false)
     }
   }, [])
 
@@ -55,6 +58,7 @@ const AuthProvider = ({ children }: Readonly<{ children: ReactNode }>) => {
         getLoggedInUser: getLoggedInUser,
         loggedInUser: loggedInUser,
         setLoggedInUser: setLoggedInUser,
+        logout: logoutUser,
       }}
     >
       {children}

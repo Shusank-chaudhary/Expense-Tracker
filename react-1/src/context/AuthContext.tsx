@@ -12,6 +12,7 @@ export type IUser = {
 export interface IAuthContext {
   login: (data: ICredentials) => Promise<IUser | void>;
   getLoggedInUser: () => Promise<IUser | void>;
+  logout: () => void;
   loggedInUser: undefined | IUser,
   setLoggedInUser: Dispatch<SetStateAction<IUser|undefined>>
 }
@@ -19,6 +20,7 @@ export interface IAuthContext {
 const AuthContext = createContext<IAuthContext>({
   loggedInUser: undefined,
   login: async (): Promise<IUser | void> => {},
+  logout: ():void => {},
   getLoggedInUser:  async (): Promise<IUser | void> => {}, 
   setLoggedInUser: ():void => {}
 });
