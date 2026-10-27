@@ -35,18 +35,21 @@ export const LoginForm = () => {
     resolver: zodResolver(LoginDTO)
   })
 
-  const handleLoginSubmit = async (data: ICredentials) => {
-    try {
-      console.log(data);
 
-      await login(data);
+const handleLoginSubmit = async (data: ICredentials) => {
+  try {
+    const loggedInUser = await login(data);
 
+    if (loggedInUser?.role === "admin") {
+      navigate("/admin");
+    } else if (loggedInUser?.role === "user") {
       navigate("/user");
-
-    } catch (error) {
-      console.log(error);
     }
+  } catch (error) {
+    console.log(error);
   }
+};
+
 
   return (
     <>

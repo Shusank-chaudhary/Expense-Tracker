@@ -7,6 +7,7 @@ export type IUser = {
   email:string,
   name:string,
   updatedAt:string,
+  role: "admin" | "user"
 };
 
 export interface IAuthContext {

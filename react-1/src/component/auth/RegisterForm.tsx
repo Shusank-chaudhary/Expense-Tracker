@@ -3,6 +3,8 @@ import { FormInput, FormLabel } from "../form/Input";
 import { OutLinedButton } from "../ui/Linked";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import axiosInstance from "../../config/axiosConfig";
+import { useNavigate } from "react-router";
 
 export interface ICredentials {
   name: string;
@@ -11,7 +13,7 @@ export interface ICredentials {
   confirmPassword: string;
 }
 
-const RegsiterinDTO = z.object({
+const RegisterinDTO = z.object({
   name: z.string().nonempty("Name is required").nonoptional(),
   email: z.string().nonempty("Email is required").nonoptional(),
   password: z.string().nonempty("Password is required").nonoptional(),
@@ -20,7 +22,7 @@ const RegsiterinDTO = z.object({
 
 export const RegisterForm = () => {
   const formFieldClassName = "flex flex-col gap-2";
-
+  const navigate = useNavigate();
   const {control, handleSubmit, formState: {errors}} = useForm({
     defaultValues: {
       name: "",
@@ -28,12 +30,33 @@ export const RegisterForm = () => {
       password: "",
       confirmPassword: "",
     },
-    resolver: zodResolver(RegsiterinDTO)
+    resolver: zodResolver(RegisterinDTO)
   });
 
-  const handleRegisterSubmit = (data: ICredentials) => {
-    console.log(data);
-  }
+  // const handleRegisterSubmit = (data: ICredentials) => {
+  //   console.log(data);
+  // }
+  const handleRegisterSubmit = async (data: ICredentials) => {
+    try {
+      const response = await axiosInstance.post("/auth/register", {
+        name: data.name,
+        email: data.email,
+        Password: data.password,
+        confirmPassword: data.confirmPassword,
+      });
+
+      if (response.data.status) {
+        navigate("/", {
+          state: {
+            message: "Registration successful! Please log in.",
+            email: data.email,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
+  };
 
   return (
     <>
