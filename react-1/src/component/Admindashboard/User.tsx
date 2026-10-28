@@ -1,74 +1,114 @@
+import { useState, useEffect } from "react";
+import { RegisterForm } from "../auth/RegisterForm";
+import axiosInstance from "../../config/axiosConfig";
+
+interface IUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function User() {
+
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [users, setUsers] = useState<IUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const getAllUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await axiosInstance.get("/auth/users");
+      console.log("API Response:", response.data);
+      console.log("Users Data:", response.data.data);
+
+      if (response.data.status) {
+        setUsers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+      setError("Unable to load users. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    getAllUsers();
+  }, []);
+
   return (<>
     <div className="min-h-screen bg-gray-100 p-6">
 
-      {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            Users
-          </h1>
-
+          <h1 className="text-2xl font-bold text-gray-800">Users</h1>
           <p className="text-sm text-gray-500 mt-1">
             Manage registered users of your expense tracker.
           </p>
         </div>
 
-        <button className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 rounded-lg">
+        <button
+          type="button"
+          onClick={() => setIsAddUserOpen(true)}
+          className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 rounded-lg"
+        >
           + Add User
         </button>
       </div>
 
+{isAddUserOpen && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    onClick={() => setIsAddUserOpen(false)}
+  >
+    <div
+      className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="mb-5 flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-800">
+          Add New User
+        </h2>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">
-            Total Users
-          </p>
-
-          <h2 className="text-2xl font-bold text-gray-800 mt-2">
-            1,245
-          </h2>
-
-          <p className="text-sm text-green-600 mt-2">
-            +8.2% this month
-          </p>
-        </div>
-
-
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">
-            Active Users
-          </p>
-
-          <h2 className="text-2xl font-bold text-green-700 mt-2">
-            1,120
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-2">
-            89.9% of total users
-          </p>
-        </div>
-
-
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <p className="text-sm text-gray-500">
-            Blocked Users
-          </p>
-
-          <h2 className="text-2xl font-bold text-red-600 mt-2">
-            125
-          </h2>
-
-          <p className="text-sm text-gray-500 mt-2">
-            10.1% of total users
-          </p>
-        </div>
-
+        <button
+          type="button"
+          onClick={() => setIsAddUserOpen(false)}
+          className="text-2xl text-gray-500 hover:text-gray-800"
+          aria-label="Close registration form"
+        >
+          &times;
+        </button>
       </div>
 
+      <div className="[&_input]:!text-gray-900 [&_input]:!bg-white">
+        <RegisterForm
+          isAdminForm
+          onSuccess={() => {
+            setIsAddUserOpen(false);
+            getAllUsers();
+          }}
+        />
+      </div>
+    </div>
+  </div>
+)}
+
+      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <p className="text-sm text-gray-500">
+          Total Registered Users
+        </p>
+
+        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+          {users.length}
+        </h2>
+      </div>
 
       {/* Search & Filter */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
@@ -123,17 +163,12 @@ export default function User() {
             <h2 className="text-lg font-semibold text-gray-800">
               All Users
             </h2>
-
-            <p className="text-sm text-gray-500 mt-1">
-              1,245 registered users
-            </p>
           </div>
 
         </div>
 
 
         <div className="overflow-x-auto">
-
           <table className="w-full text-left">
 
             {/* Table Header */}
@@ -165,294 +200,100 @@ export default function User() {
 
             </thead>
 
-
-            {/* Table Body */}
             <tbody className="divide-y divide-gray-100">
-
-
-              {/* User 1 */}
-              <tr className="hover:bg-gray-50">
-
-                <td className="px-6 py-4">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="w-10 h-10 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-semibold">
-                      RS
-                    </div>
-
-                    <div>
-
-                      <p className="font-medium text-gray-800">
-                        Ram Sharma
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        ram@gmail.com
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                    Active
-                  </span>
-
-                </td>
-
-
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  Aug 08, 2026
-                </td>
-
-
-                <td className="px-6 py-4 font-medium text-gray-800">
-                  Rs. 12,500
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <div className="flex justify-end gap-2">
-
-                    <button className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg">
-                      View
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    Loading users...
+                  </td>
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-red-600">
+                    {error}
+                    <button
+                      type="button"
+                      onClick={getAllUsers}
+                      className="ml-3 text-green-700 underline"
+                    >
+                      Retry
                     </button>
-
-                    <button className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg">
-                      Edit
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-                      Delete
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
-
-              {/* User 2 */}
-              <tr className="hover:bg-gray-50">
-
-                <td className="px-6 py-4">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-semibold">
-                      HT
-                    </div>
-
-                    <div>
-
-                      <p className="font-medium text-gray-800">
-                        Hari Thapa
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        hari@gmail.com
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                    Active
-                  </span>
-
-                </td>
-
-
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  Aug 07, 2026
-                </td>
-
-
-                <td className="px-6 py-4 font-medium text-gray-800">
-                  Rs. 8,200
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <div className="flex justify-end gap-2">
-
-                    <button className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg">
-                      View
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg">
-                      Edit
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-                      Delete
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
-
-              {/* User 3 */}
-              <tr className="hover:bg-gray-50">
-
-                <td className="px-6 py-4">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-semibold">
-                      SR
-                    </div>
-
-                    <div>
-
-                      <p className="font-medium text-gray-800">
-                        Sita Rai
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        sita@gmail.com
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
-                    Blocked
-                  </span>
-
-                </td>
-
-
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  Aug 05, 2026
-                </td>
-
-
-                <td className="px-6 py-4 font-medium text-gray-800">
-                  Rs. 15,300
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <div className="flex justify-end gap-2">
-
-                    <button className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg">
-                      View
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg">
-                      Edit
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-                      Delete
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
-
-              {/* User 4 */}
-              <tr className="hover:bg-gray-50">
-
-                <td className="px-6 py-4">
-
-                  <div className="flex items-center gap-3">
-
-                    <div className="w-10 h-10 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-semibold">
-                      AG
-                    </div>
-
-                    <div>
-
-                      <p className="font-medium text-gray-800">
-                        Anil Gurung
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        anil@gmail.com
-                      </p>
-
-                    </div>
-
-                  </div>
-
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                    Active
-                  </span>
-
-                </td>
-
-
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  Aug 03, 2026
-                </td>
-
-
-                <td className="px-6 py-4 font-medium text-gray-800">
-                  Rs. 6,700
-                </td>
-
-
-                <td className="px-6 py-4">
-
-                  <div className="flex justify-end gap-2">
-
-                    <button className="px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg">
-                      View
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg">
-                      Edit
-                    </button>
-
-                    <button className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">
-                      Delete
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    No users found.
+                  </td>
+                </tr>
+              ) : (
+                users.map((user) => (
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 font-semibold text-green-700">
+                          {user.name
+                            .split(" ")
+                            .map((part) => part[0])
+                            .join("")
+                            .slice(0, 2)
+                            .toUpperCase()}
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-gray-800">{user.name}</p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                        {user.role === "admin" ? "Admin" : "Active"}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+
+                    <td className="px-6 py-4 font-medium text-gray-800">
+                      —
+                    </td>
+
+                    <td className="px-6 py-4">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => console.log("View user:", user._id)}
+                          className="rounded-lg px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+                        >
+                          View
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => console.log("Edit user:", user._id)}
+                          className="rounded-lg px-3 py-1.5 text-sm text-green-600 hover:bg-green-50"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => console.log("Delete user:", user._id)}
+                          className="rounded-lg px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
 
           </table>
-
         </div>
 
 

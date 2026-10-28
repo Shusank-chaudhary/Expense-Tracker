@@ -13,6 +13,8 @@ authRouter.post("/login", authctrl.userLogin);
 authRouter.post("/register", bodyValidator(RegisterSchema),authctrl.userRegister);
 authRouter.get("/me", Authorization(), authctrl.getLoggedInUserprofile);
 
-authRouter.get("/users",Authorization(), AdminAuthorization(), adminctrl.updateProfile)
+authRouter.get("/users", Authorization(), AdminAuthorization(), adminctrl.getAllUsers);
+authRouter.put("/users/:userId", Authorization(), AdminAuthorization(), adminctrl.updateProfile);
+authRouter.delete("/users/:userId", Authorization(), AdminAuthorization(), adminctrl.deleteUser);
 
 export default authRouter;

@@ -74,9 +74,132 @@ class AuthController implements IAuthController {
 }
 
 class AdminController implements IAdminController{
-    async updateProfile(req: Request, res: Response, next: NextFunction){
+    async getAllUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const users = await UserModel.find().select("-Password");
+
+            return res.status(200).json({
+                status: true,
+                message: "Users fetched successfully",
+                data: users,
+            });
+        } catch (exception) {
+            next(exception);
+        }
+    }
+
+    async updateProfile(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ): Promise<void> {
+        try {
+            const userId = req.params.userId;
+            const { name, email, Password } = req.body;
+
+            // Check whether any fields were provided
+            if (!name && !email && !Password) {
+                throw {
+                    code: 422,
+                    message: "No profile fields provided."
+                };
+            }
+
+            // Find the user
+            const userDetail = await UserModel.findById(userId);
+
+            if (!userDetail) {
+                throw {
+                    code: 404,
+                    message: "User not found."
+                };
+            }
+
+            // Validate name
+            if (name !== undefined) {
+                if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 50) {
+                    throw {
+                        code: 422,
+                        message: "Name must be between 2 and 50 characters."
+                    };
+                }
+
+                userDetail.name = name.trim();
+            }
+
+            // Validate email
+            if (email !== undefined) {
+                if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    throw {
+                        code: 422,
+                        message: "Please provide a valid email address."
+                    };
+                }
+
+                userDetail.email = email.trim();
+            }
+
+            // Hash password if provided
+            if (Password !== undefined) {
+                if (typeof Password !== "string" || Password.length < 8) {
+                    throw {
+                        code: 422,
+                        message: "Password must be at least 8 characters long."
+                    };
+                }
+
+                userDetail.Password = bcrypt.hashSync(Password, 12);
+            }
+
+            // Save updated user
+            await userDetail.save();
+
+            // Return updated profile without password
+            res.status(200).json({
+                data: {
+                    _id: userDetail._id,
+                    name: userDetail.name,
+                    email: userDetail.email,
+                    role: userDetail.role,
+                    createdAt: userDetail.createdAt,
+                    updatedAt: userDetail.updatedAt,
+                },
+                status: true,
+                message: "Profile updated successfully."
+            });
+
+        } catch (exception: any) {
+            // Handle duplicate email
+            if (exception?.code === 11000) {
+                return next({
+                    code: 409,
+                    message: "This email address is already in use."
+                });
+            }
+
+            next(exception);
+        }
+    }
+
+    async deleteUser(req: Request &{loggedInUser: IUser}, res: Response, next: NextFunction): Promise<void>{
         try{
-            //
+            const userId = req.params.userId;
+            const loggedInUser = req.loggedInUser;
+
+            const userDetail = await UserModel.findById(userId);
+            if(userDetail?._id.equals(loggedInUser._id as string)){
+                throw{code: 404, message:"User not found."}
+            }
+            if(!userDetail){
+                throw{code: 422, message: "You are not allowed to delete your own account."}
+            }else{
+                const del = await UserModel.findByIdAndDelete(userId);
+                res.json({
+                    data: null,
+                    status: true,
+                    message: "User deleted successfully."
+                })
+            }
         }catch(exception){
             next(exception);
         }
