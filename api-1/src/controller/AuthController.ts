@@ -181,29 +181,49 @@ class AdminController implements IAdminController{
         }
     }
 
-    async deleteUser(req: Request &{loggedInUser: IUser}, res: Response, next: NextFunction): Promise<void>{
-        try{
-            const userId = req.params.userId;
+    async deleteUser(
+        req: Request & { loggedInUser?: IUser },
+        res: Response,
+        next: NextFunction
+    ) {
+        try {
+            const { userId } = req.params;
             const loggedInUser = req.loggedInUser;
 
+            if (!loggedInUser) {
+                return res.status(401).json({
+                    status: false,
+                    message: "User not authenticated",
+                });
+            }
+
             const userDetail = await UserModel.findById(userId);
-            if(userDetail?._id.equals(loggedInUser._id as string)){
-                throw{code: 404, message:"User not found."}
+
+            if (!userDetail) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found.",
+                });
             }
-            if(!userDetail){
-                throw{code: 422, message: "You are not allowed to delete your own account."}
-            }else{
-                const del = await UserModel.findByIdAndDelete(userId);
-                res.json({
-                    data: null,
-                    status: true,
-                    message: "User deleted successfully."
-                })
+
+            if (userDetail._id.equals(loggedInUser._id as string)) {
+                return res.status(403).json({
+                    status: false,
+                    message: "You cannot delete your own account.",
+                });
             }
-        }catch(exception){
+
+            await UserModel.findByIdAndDelete(userId);
+
+            return res.status(200).json({
+                status: true,
+                message: "User deleted successfully",
+            });
+        } catch (exception) {
             next(exception);
         }
     }
+    
 }
 
 export { 

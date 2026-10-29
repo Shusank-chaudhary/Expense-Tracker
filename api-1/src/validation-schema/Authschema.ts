@@ -14,6 +14,7 @@ export const RegisterSchema = z.object({
 
 export const UserProfileUpdateSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 character long").max(50, "Name must be less than 50 charcter long"),
+    email: z.email("Invalid email format").nonempty("Email is required"),
     gender: z.string().regex(/^male|female|other$/).nullable().optional(),
     address:z.string().min(10).max(100).nonempty(), 
 })
